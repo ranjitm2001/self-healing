@@ -1,8 +1,11 @@
 import random
+import re
 import uuid
 from datetime import datetime, timedelta
+from typing import Any, Union
 
 import psycopg2
+from netmiko import ConnectHandler
 
 # Database connection parameters
 db_params = {
@@ -11,6 +14,103 @@ db_params = {
     "user": "myuser",
     "password": "mypassword",
 }
+
+
+def cmd_show_application_status_ise_formatting(
+        command_string: str,
+) -> list[dict[str, str]]:
+    # Split the input into lines and skip the first two lines
+    lines = command_string.strip().split("\n")[2:]
+
+    # Define a regular expression pattern to capture the three parts
+    pattern = r"(.+?)\s{2,}(running|disabled|not running|initializing)(?:\s{2,}(\d+))?"
+
+    # Initialize empty lists to store the data
+    process_names = []
+    states = []
+    process_ids = []
+
+    # Iterate through the lines and extract the parts
+    for line in lines:
+        match = re.match(pattern, line)
+        if match:
+            process_name = match.group(1)
+            state = match.group(2)
+            process_id = match.group(3)
+            process_names.append(process_name)
+            states.append(state)
+            process_ids.append(process_id if process_id is not None else "")
+
+    # Create a list of dictionaries from the extracted data
+    data_list = []
+    for i in range(len(process_names)):
+        data_list.append(
+            {
+                "ISE PROCESS NAME": process_names[i],
+                "STATE": states[i],
+                "PROCESS ID": process_ids[i],
+            }
+        )
+    return data_list
+
+
+def cmd_show_application_status_ise(ip_address: str):
+    cisco = {
+        "device_type": "cisco_ios",
+        "host": ip_address,
+        "username": "nothing",
+        "password": "something",
+        "port": 22,
+    }
+
+    # TODO: Enable the ConnectHandler inside Cisco VPN
+    # with ConnectHandler(**cisco) as net_connect:
+    #     command = "show application status ise"
+    #     output = net_connect.send_command(command, read_timeout=60)
+
+    # TODO: Comment this on real project
+    output = """
+ISE PROCESS NAME                       STATE            PROCESS ID
+--------------------------------------------------------------------
+Database Listener                      running          3688
+Database Server                        running          41 PROCESSES
+Application Server                     running          6041
+Profiler Database                      running          4533
+AD Connector                           running          6447
+M&T Session Database                   running          2363
+M&T Log Collector                      running          6297
+M&T Log Processor                      running          6324
+Certificate Authority Service          running          6263
+pxGrid Infrastructure Service          disabled
+pxGrid Publisher Subscriber Service    not running
+pxGrid Connection Manager              disabled
+pxGrid Controller                      disabled
+Identity Mapping Service               disabled
+        """
+
+    cmd_sasi_data_list = cmd_show_application_status_ise_formatting(output)
+
+    target_key = 'ISE PROCESS NAME'
+    target_value = 'Application Server'
+
+    output_cmd: dict[str, str] = {}
+    for item in cmd_sasi_data_list:
+        if item.get(target_key) == target_value:
+            output_cmd = item
+            break
+    if output_cmd:
+        print(f'Application Server Status for {ip_address}: {output_cmd["STATE"]}')
+    else:
+        print(f'Application Server not found for {ip_address}')
+
+
+def cmd_reset_ise_servers(ip_address: str):
+    pass
+
+
+def cmd_reload_from_ssh(ip_address: str):
+    pass
+
 
 if __name__ == "__main__":
     try:
@@ -93,6 +193,26 @@ if __name__ == "__main__":
 
         print("interested_ip_address")
         print(interested_ip_address)
+
+        select_string = f"""
+        Choose an option from below:
+            1. Show application status ise
+            2. Reset ise services
+            3. Reload from SSH
+
+        Enter an option:
+        """
+
+        select_option = int(input(select_string))
+
+        if select_option == 1:
+            cmd_show_application_status_ise(interested_ip_address[0])
+        elif select_option == 2:
+            cmd_reset_ise_servers(interested_ip_address[0])
+        elif select_option == 3:
+            cmd_reload_from_ssh(interested_ip_address[0])
+        else:
+            print("Error: Selected incorrect option")
 
     except (Exception, psycopg2.Error) as error:
         print("Error:", error)
