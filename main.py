@@ -1,5 +1,6 @@
 import random
 import re
+import threading
 import time
 import uuid
 from datetime import datetime, timedelta
@@ -104,6 +105,17 @@ Identity Mapping Service               disabled
         print(f"Application Server not found for {ip_address}")
 
 
+# Function to execute the second command asynchronously
+def execute_second_command(net_connect):
+    print("command running now.....")
+    print("time-out is about 20 mins")
+    command = "application start ise"
+    print(">>> " + command)
+
+    # Trigger the command asynchronously
+    net_connect.send_command(command, read_timeout=1200)  # 1200 seconds
+
+
 def cmd_reset_ise_servers(ip_address: str):
     cisco = {
         "device_type": "cisco_ios",
@@ -123,13 +135,10 @@ def cmd_reset_ise_servers(ip_address: str):
         # NOTE: It should be triggered synchronously
         net_connect.send_command(command, read_timeout=600)  # 600 seconds
 
-        print("command running now.....")
-        print("time-out is about 20 mins")
-        command = "application start ise"
-        print(">>> " + command)
-
-        # NOTE: It could be triggered asynchronously
-        net_connect.send_command(command, read_timeout=1200)  # 1200 seconds
+        # Thread operation
+        # Now, start a separate thread to execute the second command asynchronously
+        second_command_thread = threading.Thread(target=execute_second_command, args=(net_connect,))
+        second_command_thread.start()
 
         application_still_not_up = True
         start_time = time.time()
@@ -149,23 +158,24 @@ def cmd_reset_ise_servers(ip_address: str):
                 #     output = net_connect.send_command(command, read_timeout=60)
 
                 # TODO: Comment this on real project
+
                 output = """
-                ISE PROCESS NAME                       STATE            PROCESS ID
-                --------------------------------------------------------------------
-                Database Listener                      running          3688
-                Database Server                        running          41 PROCESSES
-                Application Server                     running          6041
-                Profiler Database                      running          4533
-                AD Connector                           running          6447
-                M&T Session Database                   running          2363
-                M&T Log Collector                      running          6297
-                M&T Log Processor                      running          6324
-                Certificate Authority Service          running          6263
-                pxGrid Infrastructure Service          disabled
-                pxGrid Publisher Subscriber Service    not running
-                pxGrid Connection Manager              disabled
-                pxGrid Controller                      disabled
-                Identity Mapping Service               disabled
+ISE PROCESS NAME                       STATE            PROCESS ID
+--------------------------------------------------------------------
+Database Listener                      running          3688
+Database Server                        running          41 PROCESSES
+Application Server                     running          6041
+Profiler Database                      running          4533
+AD Connector                           running          6447
+M&T Session Database                   running          2363
+M&T Log Collector                      running          6297
+M&T Log Processor                      running          6324
+Certificate Authority Service          running          6263
+pxGrid Infrastructure Service          disabled
+pxGrid Publisher Subscriber Service    not running
+pxGrid Connection Manager              disabled
+pxGrid Controller                      disabled
+Identity Mapping Service               disabled
                         """
 
                 cmd_sasi_data_list = cmd_show_application_status_ise_formatting(output)
@@ -183,6 +193,10 @@ def cmd_reset_ise_servers(ip_address: str):
             # If it's up, set application_still_not_up = False
             # For now, let's assume you have a function to check it called check_application_status()
             application_still_not_up = check_application_status()
+            print("Current status of application is " + str(application_still_not_up))
+
+        # Join the thread here
+        second_command_thread.join()
 
         if not application_still_not_up:
             print("Application is up.")
