@@ -23,6 +23,12 @@ if __name__ == "__main__":
             "Enter the servers whose maintenance is completed: "
         ).split(" ")
 
+        # Check if the input is empty and set the lists accordingly
+        if servers_mmode_true == ['']:
+            servers_mmode_true = []
+        if servers_mmode_false == ['']:
+            servers_mmode_false = []
+
         print(servers_mmode_true)
         print(servers_mmode_false)
 
@@ -44,6 +50,12 @@ if __name__ == "__main__":
                    WHERE ip_address = %s
                """
             cursor.execute(update_query, (server,))
+
+            delete_query = """
+                   DELETE FROM server_status
+                   WHERE ip_address = %s
+            """
+            cursor.execute(delete_query, (server,))
 
             # Commit the transaction
             connection.commit()
