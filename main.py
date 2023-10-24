@@ -1,5 +1,6 @@
 import random
 import re
+import time
 import uuid
 from datetime import datetime, timedelta
 from typing import Any, Union
@@ -105,7 +106,87 @@ Identity Mapping Service               disabled
 
 
 def cmd_reset_ise_servers(ip_address: str):
-    pass
+    cisco = {
+        "device_type": "cisco_ios",
+        "host": ip_address,
+        "username": "nothing",
+        "password": "something",
+        "port": 22,
+    }
+
+    # TODO: Enable the ConnectHandler inside Cisco VPN
+    with ConnectHandler(**cisco) as net_connect:
+        print("command running now.....")
+        print("time-out is about 10 mins")
+        command = "application stop ise"
+        print(">>> " + command)
+
+        # NOTE: It should be triggered synchronously
+        net_connect.send_command(command, read_timeout=600)  # 600 seconds
+
+        print("command running now.....")
+        print("time-out is about 20 mins")
+        command = "application start ise"
+        print(">>> " + command)
+
+        # NOTE: It could be triggered asynchronously
+        net_connect.send_command(command, read_timeout=1200)  # 1200 seconds
+
+        application_still_not_up = True
+        start_time = time.time()
+
+        while application_still_not_up and time.time() - start_time < 1200:  # 1200 seconds = 20 minutes
+            command = "show application status ise"
+            time.sleep(30)  # Sleep for 30 seconds
+
+            # Here, you would perform the logic to check if the application is up.
+
+            def check_application_status() -> bool:
+                # TODO: Enable the ConnectHandler inside Cisco VPN
+                # with ConnectHandler(**cisco) as net_connect:
+                #     command = "show application status ise"
+                #     output = net_connect.send_command(command, read_timeout=60)
+
+                # TODO: Comment this on real project
+                output = """
+                ISE PROCESS NAME                       STATE            PROCESS ID
+                --------------------------------------------------------------------
+                Database Listener                      running          3688
+                Database Server                        running          41 PROCESSES
+                Application Server                     running          6041
+                Profiler Database                      running          4533
+                AD Connector                           running          6447
+                M&T Session Database                   running          2363
+                M&T Log Collector                      running          6297
+                M&T Log Processor                      running          6324
+                Certificate Authority Service          running          6263
+                pxGrid Infrastructure Service          disabled
+                pxGrid Publisher Subscriber Service    not running
+                pxGrid Connection Manager              disabled
+                pxGrid Controller                      disabled
+                Identity Mapping Service               disabled
+                        """
+
+                cmd_sasi_data_list = cmd_show_application_status_ise_formatting(output)
+
+                target_key = 'ISE PROCESS NAME'
+                target_value = 'Application Server'
+
+                application_still_not_up = False
+                for item in cmd_sasi_data_list:
+                    if item.get(target_key) == target_value:
+                        application_still_not_up = True
+                        break
+                return application_still_not_up
+
+            # If it's up, set application_still_not_up = False
+            # For now, let's assume you have a function to check it called check_application_status()
+            application_still_not_up = check_application_status()
+
+        if not application_still_not_up:
+            print("Application is up.")
+        else:
+            print("Timeout: Application is still not up after 20 minutes.")
 
 
 def cmd_reload_from_ssh(ip_address: str):
