@@ -21,6 +21,7 @@ if __name__ == "__main__":
         cursor = connection.cursor()
 
         # Execute a SELECT query
+        # TODO: Don't have to fetch DISTINCT elements, ip_address are always distinct
         cursor.execute(
             "SELECT DISTINCT ip_address, maintenance_mode FROM  server_modes"
         )
