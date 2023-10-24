@@ -65,7 +65,7 @@ if __name__ == "__main__":
 
         # Calculate the timestamp
         # TODO: Store this timestamp in DB as a global constant
-        time_range = datetime.now() - timedelta(minutes=10)
+        time_range = datetime.now() - timedelta(minutes=60)
 
         # SQL query to retrieve recent failures
         query = """
@@ -82,12 +82,20 @@ if __name__ == "__main__":
 
         # Fetch all rows
         current_failed_servers = cursor.fetchall()
+        print("current_failed_servers")
         print(current_failed_servers)
+
+        # If threshold >= 3, then
+        # show them all the self-healing options available for that particular ip_address
+        interested_ip_address = input(
+            "Enter the server which needs to be checked: "
+        ).split(" ")
+
+        print("interested_ip_address")
+        print(interested_ip_address)
 
     except (Exception, psycopg2.Error) as error:
         print("Error:", error)
-
-
 
     finally:
         # Close the cursor and connection

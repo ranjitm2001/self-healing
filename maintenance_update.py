@@ -24,9 +24,9 @@ if __name__ == "__main__":
         ).split(" ")
 
         # Check if the input is empty and set the lists accordingly
-        if servers_mmode_true == ['']:
+        if servers_mmode_true == [""]:
             servers_mmode_true = []
-        if servers_mmode_false == ['']:
+        if servers_mmode_false == [""]:
             servers_mmode_false = []
 
         print(servers_mmode_true)
