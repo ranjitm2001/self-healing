@@ -6,6 +6,8 @@
   * `python3 -m venv venv`
   * `source venv/bin/activate`
   * `pip install -r requirements.txt`
+  * If new packages are added,
+    * `pip freeze > requirements.txt`
 * Postgres Up and Running
   * If docker-compose.yaml is to be used,
     * `docker-compose up`
