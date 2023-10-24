@@ -38,11 +38,14 @@ if __name__ == "__main__":
         # Print the retrieved data
         for server_modes_result in server_modes_results:
             id_value = str(uuid.uuid4())
-            if server_modes_dict[server_modes_result[0]]:
-                # MMode is true
+
+            # If server is in maintenance_mode, skip the iteration
+            maintenance_mode_true = server_modes_dict[server_modes_result[0]]
+            if maintenance_mode_true:
                 continue
 
-            failure_status = random.randint(0, 1)  # Based of server_modes_result[0]
+            # TODO: It shall be replace by cli.authenticate()
+            failure_status = random.randint(0, 1)
 
             # Insert the data into the server_status table
             insert_query = """
@@ -61,6 +64,7 @@ if __name__ == "__main__":
         connection.commit()
 
         # Calculate the timestamp
+        # TODO: Store this timestamp in DB as a global constant
         time_range = datetime.now() - timedelta(minutes=10)
 
         # SQL query to retrieve recent failures
@@ -78,9 +82,12 @@ if __name__ == "__main__":
 
         # Fetch all rows
         current_failed_servers = cursor.fetchall()
+        print(current_failed_servers)
 
     except (Exception, psycopg2.Error) as error:
         print("Error:", error)
+
+
 
     finally:
         # Close the cursor and connection
