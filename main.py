@@ -3,7 +3,6 @@ import re
 import time
 import uuid
 from datetime import datetime, timedelta
-from typing import Any, Union
 
 import psycopg2
 from netmiko import ConnectHandler
@@ -18,7 +17,7 @@ db_params = {
 
 
 def cmd_show_application_status_ise_formatting(
-        command_string: str,
+    command_string: str,
 ) -> list[dict[str, str]]:
     # Split the input into lines and skip the first two lines
     lines = command_string.strip().split("\n")[2:]
@@ -91,8 +90,8 @@ Identity Mapping Service               disabled
 
     cmd_sasi_data_list = cmd_show_application_status_ise_formatting(output)
 
-    target_key = 'ISE PROCESS NAME'
-    target_value = 'Application Server'
+    target_key = "ISE PROCESS NAME"
+    target_value = "Application Server"
 
     output_cmd: dict[str, str] = {}
     for item in cmd_sasi_data_list:
@@ -102,7 +101,7 @@ Identity Mapping Service               disabled
     if output_cmd:
         print(f'Application Server Status for {ip_address}: {output_cmd["STATE"]}')
     else:
-        print(f'Application Server not found for {ip_address}')
+        print(f"Application Server not found for {ip_address}")
 
 
 def cmd_reset_ise_servers(ip_address: str):
@@ -135,7 +134,9 @@ def cmd_reset_ise_servers(ip_address: str):
         application_still_not_up = True
         start_time = time.time()
 
-        while application_still_not_up and time.time() - start_time < 1200:  # 1200 seconds = 20 minutes
+        while (
+            application_still_not_up and time.time() - start_time < 1200
+        ):  # 1200 seconds = 20 minutes
             command = "show application status ise"
             time.sleep(30)  # Sleep for 30 seconds
 
@@ -169,8 +170,8 @@ def cmd_reset_ise_servers(ip_address: str):
 
                 cmd_sasi_data_list = cmd_show_application_status_ise_formatting(output)
 
-                target_key = 'ISE PROCESS NAME'
-                target_value = 'Application Server'
+                target_key = "ISE PROCESS NAME"
+                target_value = "Application Server"
 
                 application_still_not_up = False
                 for item in cmd_sasi_data_list:
