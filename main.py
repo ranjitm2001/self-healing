@@ -21,7 +21,9 @@ if __name__ == "__main__":
         cursor = connection.cursor()
 
         # Execute a SELECT query
-        cursor.execute("SELECT DISTINCT ip_address, maintenance_mode FROM server_modes")
+        cursor.execute(
+            "SELECT DISTINCT ip_address, maintenance_mode FROM  server_modes"
+        )
         server_modes_results = cursor.fetchall()
 
         # Make key-value pair between ip and mmode
