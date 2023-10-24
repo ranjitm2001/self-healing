@@ -18,5 +18,8 @@
     * `docker run --name postgres-container -e POSTGRES_PASSWORD=mypassword -d -p 5432:5432 postgres`
     * `psql -h localhost -p 5432 -U postgres -d postgres`
     * `docker execute -it db-image psql -U postgres`
-* Run the Python main.py file
-  * `python3 main.py`
+* Run
+  * To run the main automation,
+    * `python3 main.py`
+  * To update the maintenance_mode,
+    * `python3 maintanenace_update.py`
