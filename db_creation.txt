@@ -1,0 +1,13 @@
+CREATE TABLE server_modes (
+    ip_address INET PRIMARY KEY,
+    maintenance_mode BOOLEAN
+);
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp"; -- Enable UUID generation if not already done
+
+CREATE TABLE server_status (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    ip_address INET,
+    failure_status BOOLEAN,
+    created_at TIMESTAMP DEFAULT current_timestamp
+);
